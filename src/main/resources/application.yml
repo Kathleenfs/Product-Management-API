@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: product-management-api
+
+  profiles:
+    active: dev
