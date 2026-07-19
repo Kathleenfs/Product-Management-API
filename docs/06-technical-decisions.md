@@ -59,3 +59,10 @@ Using Flyway provides the following benefits:
 * The complete database history is preserved.
 
 Hibernate is configured with `ddl-auto: validate`, allowing it to validate the entity mappings without modifying the database schema. Database creation and evolution are exclusively handled by Flyway migrations.
+
+
+## Data Integrity
+
+Database constraints are used as the final layer of data protection.
+
+Business validations are implemented in the application layer, but database constraints ensure data consistency even in unexpected scenarios such as concurrent requests or external data manipulation.

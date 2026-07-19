@@ -1,11 +1,10 @@
-# Database Model
+## Database Constraints
 
-## Overview
+The Category table contains the following constraints:
 
-The application uses PostgreSQL as the relational database.
-
-The database schema is managed through Flyway migrations following a Database First approach.
-
+- Primary key: pk_category
+- Unique constraint: uk_category_name
+- Required fields: name, active, created_at, updated_at
 ---
 
 ## Entities
