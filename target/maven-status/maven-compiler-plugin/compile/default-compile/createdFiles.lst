@@ -1,1 +1,9 @@
+io\github\kathleenfs\productmanagementapi\dto\response\CategoryResponseDTO.class
+io\github\kathleenfs\productmanagementapi\domain\entity\Category.class
+io\github\kathleenfs\productmanagementapi\mapper\CategoryMapper.class
+io\github\kathleenfs\productmanagementapi\controller\CategoryController.class
+io\github\kathleenfs\productmanagementapi\repository\CategoryRepository.class
+io\github\kathleenfs\productmanagementapi\ProductManagementApiApplication.class
+io\github\kathleenfs\productmanagementapi\dto\request\CategoryRequestDTO.class
 org\example\Main.class
+io\github\kathleenfs\productmanagementapi\service\CategoryService.class

@@ -12,19 +12,39 @@ The application is organized into independent layers that communicate in a singl
 
 ```text
 HTTP Request
-      │
+      |
       ▼
 Controller
-      │
+      |
+      ▼
+Request DTO
+      |
       ▼
 Service
-      │
+      |
+      ▼
+Domain Model
+(Entity)
+      |
       ▼
 Repository
-      │
+      |
       ▼
 PostgreSQL Database
-      │
+
+
+PostgreSQL Database
+      |
+      ▼
+Repository
+      |
+      ▼
+Domain Model
+(Entity)
+      |
+      ▼
+Response DTO
+      |
       ▼
 HTTP Response
 ```
@@ -53,9 +73,59 @@ Services coordinate application behavior, perform validations, and communicate w
 
 Responsible for data access using Spring Data JPA.
 
-Repositories communicate directly with the database.
+Repositories abstract database operations and communicate directly with the PostgreSQL database, providing a clean separation between business logic and persistence logic.
+
+Custom query methods are created using Spring Data derived query methods.
+
+Example:
+
+- `existsByName(String name)`
+
+This method allows checking category uniqueness before persistence, complementing the database constraint defined by the UNIQUE key.
+### Domain
+
+Represents the core business model of the application.
+
+It contains entities and other domain objects that describe the business concepts independently of the application layers.
+
+Current package:
+
+- `entity`
+
+Future packages may include:
+
+- `enum`
+- `valueobject`
 
 ---
+
+## Data Transfer Objects (DTOs)
+
+DTOs are used to separate API contracts from database entities.
+
+The application uses different DTOs for input and output:
+
+- Request DTOs represent client input.
+- Response DTOs define API responses.
+
+This approach prevents exposing persistence details and improves maintainability.
+
+## Mapper
+
+The Mapper layer is responsible for converting objects between different representations.
+
+It separates object transformation logic from business logic.
+
+Examples:
+
+- Request DTO → Domain Entity
+- Domain Entity → Response DTO
+
+Responsibilities:
+
+- Convert DTOs into entities.
+- Convert entities into response DTOs.
+- Keep conversion logic centralized.
 
 ### Database
 
@@ -74,8 +144,9 @@ src/main/java
 │
 ├── config
 ├── controller
+├── domain
+│   └── entity
 ├── dto
-├── entity
 ├── exception
 ├── mapper
 ├── repository
@@ -90,10 +161,10 @@ src/main/java
 
 The project follows these principles:
 
-* Separation of Concerns
-* Layered Architecture
-* SOLID Principles
-* RESTful API Design
-* Database Versioning
-* Stateless Authentication
-* Clean Code Practices
+- Separation of Concerns
+- Layered Architecture
+- SOLID Principles
+- RESTful API Design
+- Database Versioning
+- Stateless Authentication
+- Clean Code Practices

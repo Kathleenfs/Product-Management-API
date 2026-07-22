@@ -1,2 +1,9 @@
+C:\Users\T-GAMER\IdeaProjects\product-management-api\product-management-api\src\main\java\io\github\kathleenfs\productmanagementapi\controller\CategoryController.java
+C:\Users\T-GAMER\IdeaProjects\product-management-api\product-management-api\src\main\java\io\github\kathleenfs\productmanagementapi\domain\entity\Category.java
+C:\Users\T-GAMER\IdeaProjects\product-management-api\product-management-api\src\main\java\io\github\kathleenfs\productmanagementapi\dto\request\CategoryRequestDTO.java
+C:\Users\T-GAMER\IdeaProjects\product-management-api\product-management-api\src\main\java\io\github\kathleenfs\productmanagementapi\dto\response\CategoryResponseDTO.java
+C:\Users\T-GAMER\IdeaProjects\product-management-api\product-management-api\src\main\java\io\github\kathleenfs\productmanagementapi\mapper\CategoryMapper.java
 C:\Users\T-GAMER\IdeaProjects\product-management-api\product-management-api\src\main\java\io\github\kathleenfs\productmanagementapi\ProductManagementApiApplication.java
+C:\Users\T-GAMER\IdeaProjects\product-management-api\product-management-api\src\main\java\io\github\kathleenfs\productmanagementapi\repository\CategoryRepository.java
+C:\Users\T-GAMER\IdeaProjects\product-management-api\product-management-api\src\main\java\io\github\kathleenfs\productmanagementapi\service\CategoryService.java
 C:\Users\T-GAMER\IdeaProjects\product-management-api\product-management-api\src\main\java\org\example\Main.java
