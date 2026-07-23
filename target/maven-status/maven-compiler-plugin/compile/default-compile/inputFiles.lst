@@ -2,6 +2,10 @@ C:\Users\T-GAMER\IdeaProjects\product-management-api\product-management-api\src\
 C:\Users\T-GAMER\IdeaProjects\product-management-api\product-management-api\src\main\java\io\github\kathleenfs\productmanagementapi\domain\entity\Category.java
 C:\Users\T-GAMER\IdeaProjects\product-management-api\product-management-api\src\main\java\io\github\kathleenfs\productmanagementapi\dto\request\CategoryRequestDTO.java
 C:\Users\T-GAMER\IdeaProjects\product-management-api\product-management-api\src\main\java\io\github\kathleenfs\productmanagementapi\dto\response\CategoryResponseDTO.java
+C:\Users\T-GAMER\IdeaProjects\product-management-api\product-management-api\src\main\java\io\github\kathleenfs\productmanagementapi\exception\ApiErrorResponse.java
+C:\Users\T-GAMER\IdeaProjects\product-management-api\product-management-api\src\main\java\io\github\kathleenfs\productmanagementapi\exception\CategoryAlreadyExistsException.java
+C:\Users\T-GAMER\IdeaProjects\product-management-api\product-management-api\src\main\java\io\github\kathleenfs\productmanagementapi\exception\GlobalExceptionHandler.java
+C:\Users\T-GAMER\IdeaProjects\product-management-api\product-management-api\src\main\java\io\github\kathleenfs\productmanagementapi\exception\ResourceNotFoundException.java
 C:\Users\T-GAMER\IdeaProjects\product-management-api\product-management-api\src\main\java\io\github\kathleenfs\productmanagementapi\mapper\CategoryMapper.java
 C:\Users\T-GAMER\IdeaProjects\product-management-api\product-management-api\src\main\java\io\github\kathleenfs\productmanagementapi\ProductManagementApiApplication.java
 C:\Users\T-GAMER\IdeaProjects\product-management-api\product-management-api\src\main\java\io\github\kathleenfs\productmanagementapi\repository\CategoryRepository.java

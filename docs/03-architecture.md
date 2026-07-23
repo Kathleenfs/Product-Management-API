@@ -55,12 +55,17 @@ HTTP Response
 
 ### Controller
 
-Responsible for receiving HTTP requests, validating input, and returning HTTP responses.
+Responsible for receiving HTTP requests, triggering input validation, delegating operations to services, and returning HTTP responses.
+
+Input validation is performed using Jakarta Bean Validation through annotations such as:
+
+- `@Valid`
+- `@NotBlank`
+- `@Size`
 
 Controllers do not contain business rules.
 
 ---
-
 ### Service
 
 Contains the application's business logic.
@@ -79,9 +84,12 @@ Custom query methods are created using Spring Data derived query methods.
 
 Example:
 
-- `existsByName(String name)`
+* `existsByName(String name)`
 
-This method allows checking category uniqueness before persistence, complementing the database constraint defined by the UNIQUE key.
+This method allows checking category uniqueness before persistence, complementing the database constraint defined by the `UNIQUE` constraint defined in the database.
+
+---
+
 ### Domain
 
 Represents the core business model of the application.
@@ -90,42 +98,63 @@ It contains entities and other domain objects that describe the business concept
 
 Current package:
 
-- `entity`
+* `entity`
 
 Future packages may include:
 
-- `enum`
-- `valueobject`
+* `enum`
+* `valueobject`
 
 ---
 
-## Data Transfer Objects (DTOs)
+### Data Transfer Objects (DTOs)
 
 DTOs are used to separate API contracts from database entities.
 
 The application uses different DTOs for input and output:
 
-- Request DTOs represent client input.
-- Response DTOs define API responses.
+* Request DTOs represent client input.
+* Response DTOs define API responses.
 
 This approach prevents exposing persistence details and improves maintainability.
 
-## Mapper
+---
+
+### Mapper
 
 The Mapper layer is responsible for converting objects between different representations.
 
-It separates object transformation logic from business logic.
+It centralizes object conversion logic, keeping services focused on business rules.
 
 Examples:
 
-- Request DTO → Domain Entity
-- Domain Entity → Response DTO
+* Request DTO → Domain Entity
+* Domain Entity → Response DTO
 
 Responsibilities:
 
-- Convert DTOs into entities.
-- Convert entities into response DTOs.
-- Keep conversion logic centralized.
+* Convert DTOs into entities.
+* Convert entities into response DTOs.
+* Keep conversion logic centralized.
+* Avoid duplicated mapping code across services.
+
+---
+
+### Exception Handling
+
+The application uses a global exception-handling strategy to provide consistent and structured error responses.
+
+The `GlobalExceptionHandler` intercepts exceptions thrown during request processing and converts them into standardized HTTP responses.
+
+Validation errors include:
+
+- HTTP status
+- Error description
+- General message
+- Request path
+- Invalid fields and their respective messages
+
+This approach prevents exception-handling logic from being duplicated across controllers.
 
 ### Database
 
@@ -133,7 +162,7 @@ PostgreSQL is used as the relational database.
 
 Database schema creation and evolution are managed through Flyway SQL migrations following a Database First approach.
 
-Hibernate is responsible only for validating entity mappings, while Flyway is the single source of truth for database structure.
+Hibernate is responsible only for validating entity mappings, while Flyway is the single source of truth for the database structure.
 
 ---
 
@@ -147,6 +176,8 @@ src/main/java
 ├── domain
 │   └── entity
 ├── dto
+│   ├── request
+│   └── response
 ├── exception
 ├── mapper
 ├── repository
@@ -161,10 +192,26 @@ src/main/java
 
 The project follows these principles:
 
-- Separation of Concerns
-- Layered Architecture
-- SOLID Principles
-- RESTful API Design
-- Database Versioning
-- Stateless Authentication
-- Clean Code Practices
+* Separation of Concerns
+* Layered Architecture
+* SOLID Principles
+* RESTful API Design
+* Database Versioning
+* Stateless Authentication
+* Clean Code Practices
+
+---
+
+## Current Architecture Status
+
+| Layer      | Status      |
+| ---------- | ----------- |
+| Foundation | ✅ Completed |
+| Domain     | ✅ Completed |
+| Validation | ⏳ Planned   |
+| Security   | ⏳ Planned   |
+| Testing    | ⏳ Planned   |
+| DevOps     | ⏳ Planned   |
+
+```
+```
