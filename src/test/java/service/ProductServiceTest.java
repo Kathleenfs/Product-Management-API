@@ -19,8 +19,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -360,6 +359,92 @@ class ProductServiceTest {
 
         verify(productRepository).findById(1L);
         verify(categoryRepository).findById(999L);
+        verify(productRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldDeactivateProductSuccessfully() {
+
+        Product product = new Product();
+        product.setId(1L);
+        product.setName("Notebook");
+        product.setActive(true);
+
+        when(productRepository.findById(1L))
+                .thenReturn(Optional.of(product));
+
+        productService.deactivate(1L);
+
+        assertFalse(product.getActive());
+
+        verify(productRepository).findById(1L);
+        verify(productRepository).save(product);
+    }
+
+    @Test
+    void shouldThrowExceptionWhenDeactivatingNonExistingProduct() {
+
+        when(productRepository.findById(999L))
+                .thenReturn(Optional.empty());
+
+        assertThrows(
+                ResourceNotFoundException.class,
+                () -> productService.deactivate(999L)
+        );
+
+        verify(productRepository).findById(999L);
+        verify(productRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldActivateProductSuccessfully() {
+
+        Product product = new Product();
+        product.setId(1L);
+        product.setName("Notebook");
+        product.setActive(false);
+
+        when(productRepository.findById(1L))
+                .thenReturn(Optional.of(product));
+
+        when(productRepository.save(product))
+                .thenReturn(product);
+
+        when(productMapper.toResponse(product))
+                .thenReturn(new ProductResponseDTO(
+                        1L,
+                        "Notebook",
+                        null,
+                        new BigDecimal("5999.90"),
+                        10,
+                        true,
+                        1L,
+                        "Electronics",
+                        null,
+                        null
+                ));
+
+        ProductResponseDTO result = productService.activate(1L);
+
+        assertTrue(product.getActive());
+        assertTrue(result.active());
+
+        verify(productRepository).findById(1L);
+        verify(productRepository).save(product);
+    }
+
+    @Test
+    void shouldThrowExceptionWhenActivatingNonExistingProduct() {
+
+        when(productRepository.findById(999L))
+                .thenReturn(Optional.empty());
+
+        assertThrows(
+                ResourceNotFoundException.class,
+                () -> productService.activate(999L)
+        );
+
+        verify(productRepository).findById(999L);
         verify(productRepository, never()).save(any());
     }
 }
