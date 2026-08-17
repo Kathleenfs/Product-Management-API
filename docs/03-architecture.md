@@ -2,50 +2,74 @@
 
 ## Overview
 
-The Product Management API follows a Layered Architecture, where each layer has a single responsibility. This approach improves maintainability, readability, testability, and scalability.
+The Product Management API follows a **Layered Architecture**, where responsibilities are separated across application layers.
 
-The application is organized into independent layers that communicate in a single direction.
+This approach keeps HTTP handling, business rules, object mapping, persistence, security, and error handling isolated, improving maintainability, readability, and testability.
+
+The application is implemented as a single Spring Boot application and follows a unidirectional dependency flow between its main layers.
 
 ---
 
 ## Architecture Diagram
 
 ```text
-HTTP Request
-      |
-      ▼
-Controller
-      |
-      ▼
-Request DTO
-      |
-      ▼
+                        HTTP Request
+                             |
+                             v
+                    +------------------+
+                    | Spring Security  |
+                    | JWT Filter       |
+                    +--------+---------+
+                             |
+                             v
+                    +------------------+
+                    |    Controller    |
+                    +--------+---------+
+                             |
+                       Request DTO
+                             |
+                             v
+                    +------------------+
+                    |     Service      |
+                    +--------+---------+
+                             |
+                    +--------+---------+
+                    |                  |
+                    v                  v
+              +-----------+      +------------+
+              |  Mapper   |      | Repository |
+              +-----------+      +------+-----+
+                                       |
+                                       v
+                                 +------------+
+                                 | PostgreSQL |
+                                 +------------+
+```
+
+Response flow:
+
+```text
+PostgreSQL
+     |
+     v
+Repository
+     |
+     v
+Entity
+     |
+     v
 Service
-      |
-      ▼
-Domain Model
-(Entity)
-      |
-      ▼
-Repository
-      |
-      ▼
-PostgreSQL Database
-
-
-PostgreSQL Database
-      |
-      ▼
-Repository
-      |
-      ▼
-Domain Model
-(Entity)
-      |
-      ▼
+     |
+     v
+Mapper
+     |
+     v
 Response DTO
-      |
-      ▼
+     |
+     v
+Controller
+     |
+     v
 HTTP Response
 ```
 
@@ -55,9 +79,17 @@ HTTP Response
 
 ### Controller
 
-Responsible for receiving HTTP requests, triggering input validation, delegating operations to services, and returning HTTP responses.
+Controllers expose the REST API and act as the entry point for HTTP requests.
 
-Input validation is performed using Jakarta Bean Validation through annotations such as:
+Responsibilities include:
+
+- Receiving HTTP requests.
+- Mapping endpoint parameters and request bodies.
+- Triggering request validation.
+- Delegating operations to the Service layer.
+- Returning appropriate HTTP responses and status codes.
+
+Input validation is triggered using Jakarta Bean Validation through annotations such as:
 
 - `@Valid`
 - `@NotBlank`
@@ -66,152 +98,413 @@ Input validation is performed using Jakarta Bean Validation through annotations 
 Controllers do not contain business rules.
 
 ---
+
 ### Service
 
-Contains the application's business logic.
+The Service layer contains the application's business logic and coordinates use-case execution.
 
-Services coordinate application behavior, perform validations, and communicate with repositories.
+Responsibilities include:
+
+- Applying business rules.
+- Validating application state.
+- Retrieving and persisting entities through repositories.
+- Coordinating DTO/entity conversion through mappers.
+- Throwing domain-specific application exceptions when operations cannot be completed.
+
+Examples of service responsibilities include:
+
+- Verifying resource existence.
+- Preventing duplicate categories or products when required.
+- Activating and deactivating resources.
+- Authenticating users.
+- Generating JWTs through the authentication flow.
+
+Keeping these responsibilities outside controllers prevents HTTP concerns from becoming coupled to business logic.
 
 ---
 
 ### Repository
 
-Responsible for data access using Spring Data JPA.
+The Repository layer is responsible for persistence operations using Spring Data JPA.
 
-Repositories abstract database operations and communicate directly with the PostgreSQL database, providing a clean separation between business logic and persistence logic.
+Repositories abstract database access and communicate with PostgreSQL through JPA/Hibernate.
 
-Custom query methods are created using Spring Data derived query methods.
+Standard CRUD operations are provided by Spring Data repositories, while additional behavior can be expressed through derived query methods.
 
-Example:
+Examples include:
 
-* `existsByName(String name)`
+```java
+existsByName(String name)
+```
 
-This method allows checking category uniqueness before persistence, complementing the database constraint defined by the `UNIQUE` constraint defined in the database.
+and queries that support uniqueness validation during update operations.
+
+Application-level uniqueness checks complement constraints defined directly in the database.
 
 ---
 
 ### Domain
 
-Represents the core business model of the application.
+The Domain layer represents the application's persistent business entities.
 
-It contains entities and other domain objects that describe the business concepts independently of the application layers.
+Current domain concepts include:
 
-Current package:
+- Product
+- Category
+- User
+- Role
 
-* `entity`
+Entities define relationships and persistence mappings used by JPA/Hibernate.
 
-Future packages may include:
+The current domain package contains:
 
-* `enum`
-* `valueobject`
+```text
+domain/
+└── entity/
+```
+
+Additional domain abstractions can be introduced when required by future business rules.
 
 ---
 
 ### Data Transfer Objects (DTOs)
 
-DTOs are used to separate API contracts from database entities.
+DTOs define the external contracts of the REST API and prevent persistence entities from being exposed directly.
 
-The application uses different DTOs for input and output:
+The application separates DTOs into:
 
-* Request DTOs represent client input.
-* Response DTOs define API responses.
+```text
+dto/
+├── request/
+└── response/
+```
 
-This approach prevents exposing persistence details and improves maintainability.
+**Request DTOs** represent data received from clients.
+
+**Response DTOs** represent data returned by the API.
+
+This separation allows the API contract and persistence model to evolve independently.
 
 ---
 
 ### Mapper
 
-The Mapper layer is responsible for converting objects between different representations.
+Mappers convert data between API contracts and persistence entities.
 
-It centralizes object conversion logic, keeping services focused on business rules.
+Typical conversions include:
 
-Examples:
+```text
+Request DTO
+     |
+     v
+Entity
+```
 
-* Request DTO → Domain Entity
-* Domain Entity → Response DTO
+and:
 
-Responsibilities:
+```text
+Entity
+     |
+     v
+Response DTO
+```
 
-* Convert DTOs into entities.
-* Convert entities into response DTOs.
-* Keep conversion logic centralized.
-* Avoid duplicated mapping code across services.
+Responsibilities include:
+
+- Converting request DTOs into entities.
+- Converting entities into response DTOs.
+- Centralizing transformation logic.
+- Preventing duplicated mapping logic across services.
+
+This keeps the Service layer focused primarily on application behavior and business rules.
 
 ---
 
-### Exception Handling
+## Security Architecture
 
-The application uses a global exception-handling strategy to provide consistent and structured error responses.
+Security is implemented using Spring Security with stateless JWT authentication.
 
-The `GlobalExceptionHandler` intercepts exceptions thrown during request processing and converts them into standardized HTTP responses.
+The main authentication flow is:
 
-Validation errors include:
+```text
+Client
+   |
+   | email + password
+   v
+POST /auth/login
+   |
+   v
+AuthService
+   |
+   v
+Password Validation
+   |
+   v
+JwtService
+   |
+   v
+JWT
+```
 
-- HTTP status
-- Error description
-- General message
-- Request path
-- Invalid fields and their respective messages
+Protected requests follow:
 
-This approach prevents exception-handling logic from being duplicated across controllers.
+```text
+HTTP Request
+     |
+     | Authorization: Bearer <JWT>
+     v
+JwtAuthenticationFilter
+     |
+     v
+JWT Validation
+     |
+     v
+Spring Security Context
+     |
+     v
+Authorization Rules
+     |
+     v
+Controller
+```
 
-### Database
+The application does not maintain authenticated HTTP sessions.
+
+Authorization is based on:
+
+- `ROLE_USER`
+- `ROLE_ADMIN`
+
+`ROLE_USER` can access read operations, while write operations are restricted to `ROLE_ADMIN`.
+
+Passwords are stored using BCrypt hashing.
+
+---
+
+## Exception Handling
+
+The application uses centralized exception handling to provide consistent HTTP error responses.
+
+The `GlobalExceptionHandler` intercepts exceptions raised during request processing and converts them into structured responses.
+
+Handled scenarios include:
+
+- Invalid request data.
+- Resource not found.
+- Duplicate resources.
+- Authentication failures.
+- Invalid application state.
+
+Validation errors can include information such as:
+
+- HTTP status.
+- Error description.
+- General message.
+- Request path.
+- Invalid fields and validation messages.
+
+This prevents exception-handling logic from being duplicated across controllers.
+
+---
+
+## Validation
+
+Request validation is performed before validated request data reaches business operations.
+
+Jakarta Bean Validation annotations are applied to request DTOs and activated through `@Valid` in controller methods.
+
+This creates two validation levels:
+
+```text
+HTTP Request
+     |
+     v
+DTO Validation
+     |
+     v
+Service
+     |
+     v
+Business Rule Validation
+```
+
+DTO validation protects the API contract, while Service validation protects business rules and application state.
+
+---
+
+## Database Architecture
 
 PostgreSQL is used as the relational database.
 
-Database schema creation and evolution are managed through Flyway SQL migrations following a Database First approach.
+Database schema creation and evolution are managed through **Flyway SQL migrations**.
 
-Hibernate is responsible only for validating entity mappings, while Flyway is the single source of truth for the database structure.
+```text
+Migration Scripts
+       |
+       v
+     Flyway
+       |
+       v
+ PostgreSQL Schema
+       ^
+       |
+Hibernate Validation
+```
+
+Flyway acts as the source of truth for schema evolution.
+
+Hibernate is configured with:
+
+```yaml
+ddl-auto: validate
+```
+
+Therefore, Hibernate validates entity mappings against the existing schema instead of creating or modifying database structures automatically.
+
+This keeps database changes explicit, versioned, and reproducible.
+
+---
+
+## Main Data Relationships
+
+### Product and Category
+
+```text
+Category
+   1
+   |
+   |
+   N
+Product
+```
+
+A category can contain multiple products, while each product belongs to a category.
+
+### User and Role
+
+```text
+User
+  N
+  |
+  |
+  N
+Role
+```
+
+The many-to-many relationship is represented by:
+
+```text
+user_roles
+```
 
 ---
 
 ## Project Structure
 
 ```text
-src/main/java
+src/main/java/io/github/kathleenfs/productmanagementapi/
 │
-├── config
-├── controller
-├── domain
-│   └── entity
-├── dto
-│   ├── request
-│   └── response
-├── exception
-├── mapper
-├── repository
-├── security
-├── service
-└── validation
+├── config/
+├── controller/
+├── domain/
+│   └── entity/
+├── dto/
+│   ├── request/
+│   └── response/
+├── exception/
+├── mapper/
+├── repository/
+├── security/
+└── service/
+```
+
+Supporting resources:
+
+```text
+src/main/resources/
+│
+├── db/
+│   └── migration/
+│
+└── application.yml
+```
+
+Automated tests are maintained separately under:
+
+```text
+src/test/java/
 ```
 
 ---
 
 ## Architectural Principles
 
-The project follows these principles:
+The project applies the following principles and practices:
 
-* Separation of Concerns
-* Layered Architecture
-* SOLID Principles
-* RESTful API Design
-* Database Versioning
-* Stateless Authentication
-* Clean Code Practices
+- Layered Architecture
+- Separation of Concerns
+- Dependency Injection
+- DTO Pattern
+- Repository Pattern
+- Centralized Object Mapping
+- RESTful API Design
+- SOLID Principles
+- Clean Code Practices
+- Stateless Authentication
+- Role-Based Access Control
+- Centralized Exception Handling
+- Database Versioning
+- Externalized Security Configuration
+- Automated Testing
 
 ---
 
-## Current Architecture Status
+## Testing Strategy
 
-| Layer      | Status      |
-| ---------- | ----------- |
-| Foundation | ✅ Completed |
-| Domain     | ✅ Completed |
-| Validation | ⏳ Planned   |
-| Security   | ⏳ Planned   |
-| Testing    | ⏳ Planned   |
-| DevOps     | ⏳ Planned   |
+The architecture supports isolated testing by keeping business logic separated from infrastructure concerns.
 
+Service dependencies are mocked using Mockito:
+
+```text
+Service
+   |
+   +---- Mock Repository
+   |
+   +---- Mock Mapper
 ```
-```
+
+This allows business rules to be tested without requiring PostgreSQL or an HTTP server.
+
+Selected HTTP behavior is tested using MockMvc.
+
+JaCoCo is used to analyze code coverage and identify execution paths that are not exercised by the automated test suite.
+
+---
+
+## Architecture Status
+
+| Area | Status |
+|---|---|
+| Layered Architecture | ✅ Completed |
+| Domain Model | ✅ Completed |
+| DTOs and Mapping | ✅ Completed |
+| Validation | ✅ Completed |
+| Exception Handling | ✅ Completed |
+| Persistence | ✅ Completed |
+| Flyway Migrations | ✅ Completed |
+| JWT Authentication | ✅ Completed |
+| Role-Based Authorization | ✅ Completed |
+| Automated Testing | ✅ Completed |
+| JaCoCo Coverage | ✅ Completed |
+| Swagger / OpenAPI | ✅ Completed |
+| PostgreSQL Docker Environment | ✅ Completed |
+
+---
+
+## Architecture Scope
+
+Version `1.0.0` is implemented as a **single Spring Boot application using Layered Architecture**.
+
+The current architecture is not based on microservices or Hexagonal Architecture. Those architectural styles require different boundaries and dependency organization and are intentionally outside the scope of this application.
+
+The purpose of the current structure is to maintain explicit separation between API, business, persistence, mapping, security, and infrastructure responsibilities while keeping the application cohesive.
